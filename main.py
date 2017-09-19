@@ -6,8 +6,8 @@ import requests
 from bs4 import BeautifulSoup as BS
 
 from proxy import get_proxy
-from settings import REDIS_CONNECT as r
-from settings import TIME_OUT
+import settings
+r = settings.REDIS_CONNECT
 
 
 class Crawl():
@@ -19,11 +19,10 @@ class Crawl():
         """
         获取所有的标签
         """
-
         try:
-            proxies = get_proxy()
+            proxies = get_proxy() if settings.USE_PROXY else {}
             html = requests.get(self.all_tags_url, proxies=proxies,
-                                timeout=TIME_OUT)
+                                timeout=settings.TIME_OUT)
         except Exception as e:
             print e
             print 'retrying ...'
