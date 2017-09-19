@@ -4,6 +4,7 @@
 
 import time
 import re
+import argparse
 
 import requests
 from bs4 import BeautifulSoup as BS
@@ -18,18 +19,24 @@ class Crawl():
     获取每本书的详情
     '''
 
-    def __init__(self):
+    def __init__(self, use_proxy, timeout, sleep_time):
+        print 'use proxy:%s, timeout: %s, sleep time: %s' % (
+            use_proxy, timeout, sleep_time)
+        self.use_proxy = use_proxy
+        self.timeout = timeout
+        self.sleep_time = sleep_time
+        self.proxies = get_proxy()
         self.db = settings.MONGO_CLIENT['douban_book']
 
     def get_detail(self, url=None):
-        if settings.SLEEP:
-            time.sleep(settings.SLEEP)
+        if self.sleep_time:
+            time.sleep(self.sleep_time)
         url = url if url else r.rpop('book_href')
         params = {
             'timeout': settings.TIME_OUT,
             'headers': settings.HEADERS
         }
-        if settings.USE_PROXY:
+        if self.use_proxy:
             params['proxies'] = self.proxies
         try:
             html = requests.get(url, **params)
@@ -69,5 +76,11 @@ class Crawl():
             self.proxies = get_proxy()
             self.get_detail(url)
 
-crawl = Crawl()
-crawl.get_detail()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='manual to this script')
+    parser.add_argument('--use-proxy', type=bool, default=settings.USE_PROXY)
+    parser.add_argument('--time-out', type=int, default=settings.TIME_OUT)
+    parser.add_argument('--sleep-time', type=int, default=settings.SLEEP)
+    args = parser.parse_args()
+    crawl = Crawl(args.use_proxy, args.time_out, args.sleep_time)
+    crawl.get_detail()
